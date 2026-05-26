@@ -1,7 +1,14 @@
+# Project state
+state.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
+
+
+# Local
+data/
 
 # C extensions
 *.so

@@ -1,0 +1,35 @@
+from pathlib import Path
+
+import requests
+
+from api import VinmonopoletClient
+from storage import load_watchlist, load_state, save_state
+from models import WineProfile
+
+DATA_DIR = Path("data")
+WATCHLIST_PATH = DATA_DIR / Path("watchlist.json")
+STATE_PATH = DATA_DIR / Path("state.json")
+
+
+def main():
+    client = VinmonopoletClient()
+    
+    watchlist = load_watchlist(WATCHLIST_PATH)
+    previous = load_state(STATE_PATH)
+    
+    new_state: dict[str, WineProfile] = {}
+    for producer in watchlist:        
+        try:
+            wines = client.fetch_wines(brand_code=producer.brand_code)
+        except requests.RequestException as e:
+            print(e)
+            continue
+        print(f"Producer {producer.name} returned {len(wines)} wines.")
+        for wine in wines:
+            new_state[wine.code] = wine
+        
+    save_state(STATE_PATH, content=new_state)
+
+
+if __name__ == "__main__":
+    main()
