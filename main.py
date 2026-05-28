@@ -3,6 +3,7 @@ from pathlib import Path
 import requests
 
 from api import VinmonopoletClient
+from telegram_notifier import TelegramNotifier
 from storage import load_watchlist, load_state, save_state
 from models import WineProfile
 
@@ -13,6 +14,7 @@ STATE_PATH = DATA_DIR / Path("state.json")
 
 def main():
     client = VinmonopoletClient()
+    telegram_notifier = TelegramNotifier()
     
     watchlist = load_watchlist(WATCHLIST_PATH)
     previous = load_state(STATE_PATH)

@@ -18,26 +18,23 @@ class VinmonopoletClient:
             }
         )
 
-
     def fetch_wines(self, brand_code: str) -> list[WineProfile]:
         return [
             self._parse(p, brand_code)
             for p in self._fetch_all_wines_by_brand(brand_code)
         ]
 
-
     def _fetch_all_wines_by_brand(self, brand_code: str) -> list[dict]:
         first_response = self._search(brand_code, page=0)
-        
-        products: list[dict] = first_response["products"]
-        pagination = int(first_response["pagination"]["totalPages"])
-        
-        for page in range(1, pagination):
+
+        products = list(first_response["products"])
+        total_pages = first_response["pagination"]["totalPages"]
+
+        for page in range(1, total_pages):
             next_page_response = self._search(brand_code, page=page)
             products.extend(next_page_response["products"])
 
         return products
-
 
     def _search(self, brand_code: str, page: int, page_size: int = 50) -> dict:
         params = {
@@ -50,10 +47,8 @@ class VinmonopoletClient:
         r.raise_for_status()
         return r.json()
 
-    
-    def _determine_availability(self):
+    def _determine_availability(self): # TODO: implement with own availability model (with km filter) (check all three types)
         return False
-
 
     def _parse(self, product: dict, brand_code: str) -> WineProfile:
         return WineProfile(
@@ -62,5 +57,5 @@ class VinmonopoletClient:
             brand_code=brand_code,
             available=self._determine_availability(),
             price=product["price"]["value"],
-            url=f"{self.PRODUCT_URL_BASE}{product["url"]}"
+            url=f"{self.PRODUCT_URL_BASE}{product['url']}",
         )
