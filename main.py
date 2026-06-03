@@ -6,6 +6,7 @@ from api import VinmonopoletClient
 from telegram_notifier import TelegramNotifier
 from storage import load_watchlist, load_state, save_state
 from models import WineProfile
+from diff import compare_states
 
 DATA_DIR = Path("data")
 WATCHLIST_PATH = DATA_DIR / Path("watchlist.json")
@@ -14,21 +15,38 @@ STATE_PATH = DATA_DIR / Path("state.json")
 
 def main():
     client = VinmonopoletClient()
-    telegram_notifier = TelegramNotifier()
+    # telegram_notifier = TelegramNotifier()
+    
+    # r = telegram_notifier.check_get_updates_endpoint()
+    # print(r)
+    
     
     watchlist = load_watchlist(WATCHLIST_PATH)
     previous = load_state(STATE_PATH)
+    print(previous)
     
     new_state: dict[str, WineProfile] = {}
-    for producer in watchlist:        
+    for producer in watchlist:
         try:
             wines = client.fetch_wines(brand_code=producer.brand_code)
         except requests.RequestException as e:
-            print(e)
+            print(f"Skipping {producer.name}: {e}")
             continue
-        print(f"Producer {producer.name} returned {len(wines)} wines.")
         for wine in wines:
             new_state[wine.code] = wine
+            
+            
+    if previous is None:
+        print("First run — establishing baseline, no notifications.")
+        save_state(STATE_PATH, new_state)
+        return
+        
+    
+    events = compare_states(previous, new_state)
+    print("="*50)
+    if events:
+        print(events)
+        # notifier.send_events(events)
         
     save_state(STATE_PATH, content=new_state)
 

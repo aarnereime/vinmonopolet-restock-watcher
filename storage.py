@@ -10,9 +10,9 @@ def load_watchlist(path: Path) -> list[Producer]:
     return [Producer(**p) for p in watchlist_data["producers"]]
     
     
-def load_state(path: Path) -> dict[str, WineProfile]:
+def load_state(path: Path) -> dict[str, WineProfile] | None:
     if not path.exists():
-        return {}
+        return None
     raw = json.loads(path.read_text())
     return {code: WineProfile(**wine) for code, wine in raw.items()}
 

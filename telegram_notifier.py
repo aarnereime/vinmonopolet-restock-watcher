@@ -22,3 +22,9 @@ class TelegramNotifier:
         }
         r = requests.post(url, data=payload, timeout=self.timeout)
         r.raise_for_status()
+
+    def check_get_updates_endpoint(self) -> dict:
+        url = f"https://api.telegram.org/bot{self.token}/getUpdates?limit=1"
+        r = requests.get(url, timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
