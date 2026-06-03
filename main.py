@@ -15,15 +15,10 @@ STATE_PATH = DATA_DIR / Path("state.json")
 
 def main():
     client = VinmonopoletClient()
-    # telegram_notifier = TelegramNotifier()
-    
-    # r = telegram_notifier.check_get_updates_endpoint()
-    # print(r)
-    
+    # telegram_notifier = TelegramNotifier()  
     
     watchlist = load_watchlist(WATCHLIST_PATH)
     previous = load_state(STATE_PATH)
-    print(previous)
     
     new_state: dict[str, WineProfile] = {}
     for producer in watchlist:
@@ -35,17 +30,18 @@ def main():
         for wine in wines:
             new_state[wine.code] = wine
             
+    for k, v in new_state.items():
+        print(k, ":", v)
             
+    # First run to establishing baseline state to compare against
     if previous is None:
-        print("First run — establishing baseline, no notifications.")
-        save_state(STATE_PATH, new_state)
+        save_state(STATE_PATH, content=new_state)
         return
         
     
-    events = compare_states(previous, new_state)
-    print("="*50)
-    if events:
-        print(events)
+    # events = compare_states(previous, new_state)
+    # if events:
+    #     pass
         # notifier.send_events(events)
         
     save_state(STATE_PATH, content=new_state)

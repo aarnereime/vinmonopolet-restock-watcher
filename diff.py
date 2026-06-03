@@ -14,11 +14,7 @@ def compare_states(
     current: dict[str, WineProfile],
 ) -> list[RestockEvent]:
     
-    print("--------")
-    print(previous)
-    print("--------")
-    print(current)
-    
+    # TODO: finish the logic here
     
     events = []
     for code, wine in current.items():

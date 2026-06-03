@@ -5,6 +5,13 @@ from dataclasses import dataclass
 class Producer:
     name: str
     brand_code: str
+    
+
+@dataclass
+class Availability:
+    online: bool
+    in_stores: bool
+    locally: bool | None = None
 
 
 @dataclass
@@ -12,6 +19,6 @@ class WineProfile:
     code: str
     name: str
     brand_code: str
-    available: bool
-    price: float | None
-    url: str | None
+    url: str
+    available: Availability
+    price: float | None = None
