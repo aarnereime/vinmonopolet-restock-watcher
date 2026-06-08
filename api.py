@@ -1,7 +1,7 @@
 import json
 import requests
 
-from models import WineProfile, Availability
+from models import WineProfile, Availability, StoreStockLevel
 from collections import namedtuple
 
 
@@ -42,19 +42,40 @@ class VinmonopoletClient:
         r.raise_for_status()
         
         return r.json()
+    
+    def _get_store_availability(self, stock_info: dict) -> list[StoreStockLevel]:
+        stores = []
+        for store in stock_info["stores"]:
+            point_of_service = store["pointOfService"]
+            
+            name = point_of_service["displayName"]
+            distance_km = float(point_of_service["formattedDistance"].split(" ")[0].replace(",", "."))
+            stock = store["stockInfo"]["stockLevel"]
+            
+            stores.append(StoreStockLevel(
+                name,
+                distance_km,
+                stock
+            ))
+            
+        return stores
+    
 
     def fetch_wines(self, brand_code: str) -> list[WineProfile]:
         products = self._fetch_all_wines_by_brand(brand_code)
         wines = [self._parse(p, brand_code) for p in products]
         
-        # Determine/expand on availability for the wines
         for wine in wines:
             if wine.available.in_stores:
                 res = self._find_stores_with_wine_in_stock(wine_code=wine.code)
-                # print(res)
-                # something something
-                wine.available.locally = True
-        
+                
+                
+                wine.available.locally = True # TODO: Fix so locally is only true is store is inside a certain radius
+                
+                store_availability = self._get_store_availability(res)
+                wine.available.stores = store_availability
+                wine.available.sort_stores_by_km()
+                
         return wines
 
 
@@ -83,7 +104,7 @@ class VinmonopoletClient:
         return r.json()
     
 
-    def _parse(self, product: list[dict], brand_code: str) -> WineProfile:
+    def _parse(self, product: dict, brand_code: str) -> WineProfile:
         product_availability = product["productAvailability"]
         online_availability: bool = product_availability["deliveryAvailability"]["availableForPurchase"]
         store_availability: bool = product_availability["storesAvailability"]["availableForPurchase"]
